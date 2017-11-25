@@ -68,12 +68,36 @@ glm::mat4 buildFrustum( float phiInDegree, float aspectRatio, float near, float 
     // buildFrustum function for programming exercise part b:
     // Add your code here:
     // ====================================================================
-
+    
+    float t, b, r, l;
+    t = near * tan(phiInDegree/2);
+    b = -near * tan(phiInDegree/2);
+    r = (t-b) * aspectRatio/2;
+    l = -(t-b) * aspectRatio/2;
+    
+    fm = glm::mat4(2*near/(r-l), 0.0, 0.0, 0.0,
+                   0.0, 2*near/(t-b), 0.0, 0.0,
+                   0.0, 0.0, -(far+near)/(far-near), -1.0,
+                   0.0, 0.0, -2*far*near/(far-near), 0.0);
+    
     // ====================================================================
     // End Exercise code
     // ====================================================================
 
     return fm;
+}
+
+glm::vec3 normalize( const glm::vec3 &a ) {
+    float length = sqrt( a[0]*a[0] + a[1]*a[1] + a[2]*a[2] );
+    return glm::vec3(a[0]/length,
+                     a[1]/length,
+                     a[2]/length);
+}
+
+glm::vec3 crossProduct( const glm::vec3 &a, const glm::vec3 &b ) {
+    return glm::vec3(a[1]*b[2]-a[2]*b[1],
+                     a[2]*b[0]-a[0]*b[2],
+                     a[0]*b[1]-a[1]*b[0]);
 }
 
 glm::mat4 lookAt(const glm::vec3 &camPos, const glm::vec3 &viewDirection, const glm::vec3 &up) {
@@ -82,7 +106,21 @@ glm::mat4 lookAt(const glm::vec3 &camPos, const glm::vec3 &viewDirection, const 
     // Lookat for programming exercise part a:
     // Add your code here:
     // ====================================================================
-
+    
+    glm::vec3 rightVec = crossProduct(viewDirection, up);
+    glm::vec3 upVec = crossProduct(rightVec, viewDirection);
+    
+    rightVec = normalize(rightVec);
+    upVec = normalize(upVec);
+    glm::vec3 normD = normalize(viewDirection);
+    
+    glm::mat4 lookAtMat = glm::mat4(rightVec[0], upVec[0], -normD[0], 0.0,
+                                    rightVec[1], upVec[1], -normD[1], 0.0,
+                                    rightVec[2], upVec[2], -normD[2], 0.0,
+                                    -camPos[0] , -camPos[1] , -camPos[2] , 1.0);
+    
+    return lookAtMat;
+    
     //return matrix;
 
     // ====================================================================
@@ -98,7 +136,9 @@ void resizeCallback( int newWidth, int newHeight )
     // projection matrix setup for programming exercise part d:
     // Add your code here:
     // ====================================================================
-
+    
+    g_ProjectionMatrix = buildFrustum( M_PI/2, (float)newWidth/newHeight, 0.8, 5.0);
+    
     // ====================================================================
     // End Exercise code
     // ====================================================================
@@ -231,7 +271,9 @@ void drawScene(int scene, float runTime) {
         // static camera for programming exercise part c:
         // Add your code here:
         // =====================================================
-
+        
+        glm::vec3 pos = glm::vec3( 0.0, -1.0, 1.0);
+        g_ViewMatrix = lookAt( pos, -pos, glm::vec3( 0.0, 0.0, 1.0));
 
         // =====================================================
         // End Exercise code
@@ -254,8 +296,7 @@ void drawScene(int scene, float runTime) {
         // Moving camera for programming exercise part e:
         // Add your code here:
         // =====================================================
-
-
+        
         // =====================================================
         // End Exercise code
         // =====================================================
